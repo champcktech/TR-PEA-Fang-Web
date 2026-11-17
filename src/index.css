@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Kanit", sans-serif;
+  --font-sans: "Sarabun", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: var(--font-sans);
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+  }
+}
+
+@keyframes powerFlow {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+@keyframes floatPin {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-power-flow {
+  stroke-dasharray: 7 7;
+  animation: powerFlow 1.1s linear infinite;
+}
+
+.animate-float-pin {
+  animation: floatPin 2.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-power-flow,
+  .animate-float-pin {
+    animation: none;
+  }
+}

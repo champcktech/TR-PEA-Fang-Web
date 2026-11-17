@@ -1,0 +1,8 @@
+{
+  "name": "งานหม้อแปลง กฟภ.สาขาฝาง",
+  "description": "ศูนย์รวมลิ้งค์ระบบงานและฐานข้อมูลงานหม้อแปลง การไฟฟ้าส่วนภูมิภาคสาขาฝาง รูปแบบแผนที่การ์ตูน 2 มิติอินเทอร์แอคทีฟ",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
