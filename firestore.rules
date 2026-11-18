@@ -53,7 +53,8 @@ service cloud.firestore {
         'transformer-docs',
         'transformer-diagram',
         'dashboard',
-        'survey'
+        'survey',
+        'transformer-inventory'
       ];
     }
 

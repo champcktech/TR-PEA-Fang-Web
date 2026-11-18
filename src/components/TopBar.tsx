@@ -40,7 +40,7 @@ export function TopBar({
 
         <nav
           aria-label="เลือกสถานีบนแผนที่"
-          className="hidden lg:flex items-center gap-5 text-sm font-medium text-slate-600"
+          className="hidden lg:flex items-center gap-3.5 xl:gap-5 text-xs xl:text-sm font-medium text-slate-600"
         >
           {MAP_ZONES.map((zone) => {
             const isActive = zone.id === activeZoneId;

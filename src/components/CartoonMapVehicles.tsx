@@ -210,7 +210,7 @@ export function CartoonMapVehicles({
               fontWeight="600"
               fontFamily="Kanit, sans-serif"
             >
-              รถยกหม้อแปลง · คลังหม้อแปลง
+              รถยกหม้อแปลง · Bisme
             </text>
           </g>
         )}

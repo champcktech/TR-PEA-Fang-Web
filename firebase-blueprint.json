@@ -2,7 +2,7 @@
   "entities": {
     "WorkLink": {
       "title": "WorkLink",
-      "description": "A work link item assigned to one of the 6 PEA Fang Mini-Map stations",
+      "description": "A work link item assigned to one of the 7 PEA Fang Mini-Map stations",
       "type": "object",
       "properties": {
         "zoneId": {
@@ -13,7 +13,8 @@
             "transformer-docs",
             "transformer-diagram",
             "dashboard",
-            "survey"
+            "survey",
+            "transformer-inventory"
           ],
           "maxLength": 40,
           "description": "Station ID on the 2D Mini-Map"

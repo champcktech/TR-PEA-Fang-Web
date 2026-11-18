@@ -194,9 +194,14 @@ export function CartoonMiniMap({
         >
           {/* Transformable Map Layer */}
           <div
-            className="absolute inset-0 w-full h-full origin-center transition-transform duration-300 ease-out will-change-transform"
+            className={`absolute inset-0 w-full h-full origin-center transition-transform duration-300 ease-out ${
+              zoom > 1 || pan.x !== 0 || pan.y !== 0 ? 'will-change-transform' : ''
+            }`}
             style={{
-              transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`,
+              transform:
+                zoom > 1 || pan.x !== 0 || pan.y !== 0
+                  ? `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom})`
+                  : undefined,
               transitionDuration: isDragging ? '0ms' : '280ms',
             }}
           >

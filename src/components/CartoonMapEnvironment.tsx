@@ -37,6 +37,7 @@ const STREET_LAMPS: Array<[number, number]> = [
 export function CartoonMapEnvironment({ isNightMode }: CartoonMapEnvironmentProps) {
   const [isEvHovered, setIsEvHovered] = useState(false);
   const [isSurveyHovered, setIsSurveyHovered] = useState(false);
+  const [isYardHovered, setIsYardHovered] = useState(false);
 
   return (
     <svg
@@ -66,8 +67,8 @@ export function CartoonMapEnvironment({ isNightMode }: CartoonMapEnvironmentProp
         </radialGradient>
 
         <radialGradient id="evCanopyGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#6EE7B7" stopOpacity="0.92" />
-          <stop offset="45%" stopColor="#34D399" stopOpacity="0.45" />
+          <stop offset="0%" stopColor="#6EE7B7" stopOpacity="0.88" />
+          <stop offset="48%" stopColor="#34D399" stopOpacity="0.42" />
           <stop offset="100%" stopColor="#10B981" stopOpacity="0" />
         </radialGradient>
 
@@ -82,278 +83,6 @@ export function CartoonMapEnvironment({ isNightMode }: CartoonMapEnvironmentProp
           <stop offset="100%" stopColor="#FEF9C3" stopOpacity="0" />
         </radialGradient>
       </defs>
-
-      {/* 2D Isometric Cartoon EV Charging Station (PEA VOLTA style) beside the main campus road */}
-      <g
-        className="pointer-events-auto cursor-help"
-        onMouseEnter={() => setIsEvHovered(true)}
-        onMouseLeave={() => setIsEvHovered(false)}
-      >
-        {/* Soft drop shadow on lawn */}
-        <polygon
-          points="944,358 1013,333 1029,362 962,386"
-          fill="rgba(24,19,38,0.22)"
-        />
-
-        {/* Concrete curb border & Asphalt EV Pull-In Pad connecting seamlessly to the road */}
-        <polygon
-          points="948,354 1012,331 1025,358 965,380"
-          fill={isNightMode ? '#334155' : '#64748B'}
-          stroke="#181326"
-          strokeWidth="1.8"
-          strokeLinejoin="round"
-        />
-        {/* Light curb edge along back & sides */}
-        <polyline
-          points="965,380 948,354 1012,331 1025,358"
-          fill="none"
-          stroke="#E2E8F0"
-          strokeWidth="2.4"
-          strokeLinejoin="round"
-        />
-        <polyline
-          points="965,380 948,354 1012,331 1025,358"
-          fill="none"
-          stroke="#181326"
-          strokeWidth="0.9"
-          strokeLinejoin="round"
-        />
-
-        {/* Bay 1 & Bay 2 Emerald-Green EV Charging Zones */}
-        <polygon
-          points="957,357 982,348 993,368 969,377"
-          fill="#10B981"
-          fillOpacity="0.88"
-          stroke="#ECFDF5"
-          strokeWidth="1.1"
-        />
-        <polygon
-          points="986,346 1010,337 1021,357 997,366"
-          fill="#10B981"
-          fillOpacity="0.88"
-          stroke="#ECFDF5"
-          strokeWidth="1.1"
-        />
-
-        {/* White "EV" pavement mark on Bay 2 (empty bay) */}
-        <text
-          x="1003"
-          y="358"
-          textAnchor="middle"
-          fill="#ECFDF5"
-          fontSize="6.5"
-          fontWeight="800"
-          fontFamily="Kanit, sans-serif"
-          transform="rotate(-20, 1003, 358)"
-        >
-          EV
-        </text>
-
-        {/* Charger Pedestal 1 (Left Bay - Actively Charging) */}
-        <g transform="translate(966, 351)">
-          <rect
-            x="-5"
-            y="-18"
-            width="10"
-            height="19"
-            rx="2"
-            fill="#F8FAFC"
-            stroke="#181326"
-            strokeWidth="1.6"
-          />
-          <rect x="-5" y="-18" width="10" height="4.5" rx="1.5" fill="#741B7E" stroke="#181326" strokeWidth="1.2" />
-          {/* Glowing screen */}
-          <rect x="-3.2" y="-11.5" width="6.4" height="5" rx="0.8" fill="#0F172A" />
-          <rect x="-2.4" y="-10.5" width="4.8" height="3" rx="0.4" fill="#34D399">
-            <animate attributeName="opacity" values="0.65;1;0.65" dur="1.1s" repeatCount="indefinite" />
-          </rect>
-          {/* Top pulsing emerald status bar */}
-          <rect x="-3" y="-20" width="6" height="2" rx="0.8" fill="#34D399">
-            <animate attributeName="opacity" values="1;0.35;1" dur="0.9s" repeatCount="indefinite" />
-          </rect>
-        </g>
-
-        {/* Charger Pedestal 2 (Right Bay - Available) */}
-        <g transform="translate(995, 340)">
-          <rect
-            x="-5"
-            y="-18"
-            width="10"
-            height="19"
-            rx="2"
-            fill="#F8FAFC"
-            stroke="#181326"
-            strokeWidth="1.6"
-          />
-          <rect x="-5" y="-18" width="10" height="4.5" rx="1.5" fill="#741B7E" stroke="#181326" strokeWidth="1.2" />
-          <rect x="-3.2" y="-11.5" width="6.4" height="5" rx="0.8" fill="#0F172A" />
-          <rect x="-2.4" y="-10.5" width="4.8" height="3" rx="0.4" fill="#38BDF8" />
-          <rect x="-3" y="-20" width="6" height="2" rx="0.8" fill="#38BDF8" />
-        </g>
-
-        {/* Charging Cable from Pedestal 1 to Parked EV Car */}
-        <path
-          d="M 971 344 Q 978 352 979 357"
-          fill="none"
-          stroke="#181326"
-          strokeWidth="2.8"
-          strokeLinecap="round"
-        />
-        <path
-          d="M 971 344 Q 978 352 979 357"
-          fill="none"
-          stroke="#34D399"
-          strokeWidth="1.4"
-          strokeLinecap="round"
-          strokeDasharray="2.5 2"
-        >
-          <animate
-            attributeName="stroke-dashoffset"
-            from="9"
-            to="0"
-            dur="0.85s"
-            repeatCount="indefinite"
-          />
-        </path>
-
-        {/* Parked 2D Cartoon Electric Car (White/Emerald EV SUV facing toward road) */}
-        <g transform="translate(977, 363) scale(0.76)">
-          {/* Car ground shadow */}
-          <ellipse cx="0" cy="7" rx="16" ry="5.5" fill="rgba(24,19,38,0.28)" />
-          {/* EV Body */}
-          <path
-            d="M -15 2 L -13 -6 L -6 -12 L 7 -12 L 13 -5 L 15 2 Q 15 6 11 6 L -12 6 Q -15 6 -15 2 Z"
-            fill="#FFFFFF"
-            stroke="#181326"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
-          {/* Teal EV accent stripe */}
-          <line x1="-13" y1="1.5" x2="13" y2="1.5" stroke="#10B981" strokeWidth="2.4" />
-          {/* Windshield & side window */}
-          <polygon points="-9,-5 -5,-10 5,-10 10,-5" fill="#7DD3FC" stroke="#181326" strokeWidth="1.4" />
-          {/* Headlights */}
-          <circle cx="-11" cy="2" r="2" fill={isNightMode ? '#FEF08A' : '#E0F2FE'} stroke="#181326" strokeWidth="1" />
-          <circle cx="9" cy="2" r="2" fill={isNightMode ? '#FEF08A' : '#E0F2FE'} stroke="#181326" strokeWidth="1" />
-          {/* Wheels */}
-          <circle cx="-8.5" cy="6" r="3.8" fill="#1E293B" stroke="#181326" strokeWidth="1.5" />
-          <circle cx="8.5" cy="6" r="3.8" fill="#1E293B" stroke="#181326" strokeWidth="1.5" />
-          {/* Floating Pulsing Charging Bolt Badge above car */}
-          <g transform="translate(0, -19)">
-            <circle cx="0" cy="0" r="6" fill="#10B981" stroke="#181326" strokeWidth="1.4">
-              <animate attributeName="r" values="5.4;6.4;5.4" dur="1.4s" repeatCount="indefinite" />
-            </circle>
-            <polygon points="1,-4 -2.5,0.5 0,0.5 -1,4 2.5,-0.5 0,-0.5" fill="#FEF08A" />
-          </g>
-        </g>
-
-        {/* Canopy Support Columns */}
-        <line x1="955" y1="351" x2="955" y2="322" stroke="#181326" strokeWidth="4.6" strokeLinecap="round" />
-        <line x1="955" y1="351" x2="955" y2="322" stroke="#475569" strokeWidth="2.4" strokeLinecap="round" />
-        <line x1="1008" y1="332" x2="1008" y2="303" stroke="#181326" strokeWidth="4.6" strokeLinecap="round" />
-        <line x1="1008" y1="332" x2="1008" y2="303" stroke="#475569" strokeWidth="2.4" strokeLinecap="round" />
-
-        {/* Sleek Isometric Solar EV Canopy Roof */}
-        {/* Roof underside shadow rim */}
-        <polygon
-          points="945,317 1011,293 1025,313 960,337"
-          fill="#4C1D95"
-          stroke="#181326"
-          strokeWidth="1.9"
-          strokeLinejoin="round"
-        />
-        {/* Canopy Top Deck */}
-        <polygon
-          points="945,313 1011,289 1025,309 960,333"
-          fill="#F8FAFC"
-          stroke="#181326"
-          strokeWidth="1.9"
-          strokeLinejoin="round"
-        />
-        {/* Solar PV Panel Array on Canopy Roof */}
-        <polygon
-          points="952,313 1008,293 1017,306 961,326"
-          fill="#0284C7"
-          stroke="#181326"
-          strokeWidth="1.2"
-          strokeLinejoin="round"
-        />
-        <line x1="970" y1="306.5" x2="979" y2="319.5" stroke="#BAE6FD" strokeWidth="0.9" />
-        <line x1="989" y1="299.5" x2="998" y2="312.5" stroke="#BAE6FD" strokeWidth="0.9" />
-        <line x1="956.5" y1="319.5" x2="1012.5" y2="299.5" stroke="#BAE6FD" strokeWidth="0.9" />
-
-        {/* Front PEA Purple Fascia & Emerald EV Sign */}
-        <polygon
-          points="960,333 1025,309 1025,315 960,339"
-          fill="#741B7E"
-          stroke="#181326"
-          strokeWidth="1.5"
-          strokeLinejoin="round"
-        />
-        <line x1="961" y1="337.5" x2="1024" y2="313.5" stroke="#34D399" strokeWidth="1.6" />
-
-        {/* Rooftop Illuminated EV Sign Badge */}
-        <g transform="translate(988, 314) rotate(-20)">
-          <rect
-            x="-13"
-            y="-7"
-            width="26"
-            height="11"
-            rx="2.5"
-            fill="#10B981"
-            stroke="#181326"
-            strokeWidth="1.4"
-          />
-          <text
-            x="0"
-            y="1"
-            textAnchor="middle"
-            fill="#FFFFFF"
-            fontSize="7.2"
-            fontWeight="800"
-            fontFamily="Kanit, sans-serif"
-          >
-            EV⚡
-          </text>
-        </g>
-
-        {/* Night Mode Canopy Under-Lighting & EV Headlight Beam */}
-        {isNightMode && (
-          <g pointerEvents="none">
-            <ellipse
-              cx="986"
-              cy="348"
-              rx="36"
-              ry="20"
-              fill="url(#evCanopyGlow)"
-              style={{ mixBlendMode: 'screen' }}
-              opacity="0.72"
-            />
-            <polygon
-              points="966,368 948,382 962,387 974,370"
-              fill="rgba(254,240,138,0.28)"
-            />
-          </g>
-        )}
-
-        {/* Hover Tooltip */}
-        {isEvHovered && (
-          <g transform="translate(985, 275)">
-            <rect x="-92" y="-16" width="184" height="24" rx="8" fill="#181326" />
-            <text
-              x="0"
-              y="0"
-              textAnchor="middle"
-              fill="#6EE7B7"
-              fontSize="12"
-              fontWeight="600"
-              fontFamily="Kanit, sans-serif"
-            >
-              สถานีชาร์จรถ EV · กฟภ.สาขาฝาง
-            </text>
-          </g>
-        )}
-      </g>
 
       {/* 2D Isometric Cartoon Survey Building (อาคารสำรวจ) + 1 Employee Reading Documents */}
       <g
@@ -588,6 +317,62 @@ export function CartoonMapEnvironment({ isNightMode }: CartoonMapEnvironmentProp
         )}
       </g>
 
+      {/* Interactive Hover Hitbox over Painted Transformer Storage Yard (ลานวางหม้อแปลง) in Map Backdrop */}
+      <g
+        className="pointer-events-auto cursor-help"
+        onMouseEnter={() => setIsYardHovered(true)}
+        onMouseLeave={() => setIsYardHovered(false)}
+      >
+        <polygon
+          points="880,292 952,254 1024,292 952,332"
+          fill="transparent"
+        />
+        {isYardHovered && (
+          <g transform="translate(952, 348)">
+            <rect x="-114" y="-16" width="228" height="24" rx="8" fill="#181326" />
+            <text
+              x="0"
+              y="0"
+              textAnchor="middle"
+              fill="#FDBA74"
+              fontSize="12"
+              fontWeight="600"
+              fontFamily="Kanit, sans-serif"
+            >
+              ลานวางหม้อแปลง · หม้อแปลงคงคลัง กฟภ.สาขาฝาง
+            </text>
+          </g>
+        )}
+      </g>
+
+      {/* Interactive Hover Hitbox over Painted EV Charging Station near เอกสารหม้อแปลง */}
+      <g
+        className="pointer-events-auto cursor-help"
+        onMouseEnter={() => setIsEvHovered(true)}
+        onMouseLeave={() => setIsEvHovered(false)}
+      >
+        <polygon
+          points="925,830 1030,725 1135,770 1055,895"
+          fill="transparent"
+        />
+        {isEvHovered && (
+          <g transform="translate(1038, 706)">
+            <rect x="-92" y="-16" width="184" height="24" rx="8" fill="#181326" />
+            <text
+              x="0"
+              y="0"
+              textAnchor="middle"
+              fill="#6EE7B7"
+              fontSize="12"
+              fontWeight="600"
+              fontFamily="Kanit, sans-serif"
+            >
+              สถานีชาร์จรถ EV · กฟภ.สาขาฝาง
+            </text>
+          </g>
+        )}
+      </g>
+
       {/* Live Animated Dashboard Graphics on the Wooden Pavilion Whiteboard (Day & Night) */}
       <g transform="translate(1384, 603) skewY(23.6)">
         {/* Crisp screen backing */}
@@ -695,7 +480,7 @@ export function CartoonMapEnvironment({ isNightMode }: CartoonMapEnvironmentProp
             <ellipse cx="916" cy="670" rx="54" ry="36" fill="url(#windowWarmGlow)" opacity="0.68" />
             <ellipse cx="732" cy="708" rx="46" ry="22" fill="url(#windowWarmGlow)" opacity="0.85" />
 
-            {/* คลังหม้อแปลง (Workshop) Open Service Bays & Side Windows */}
+            {/* Bisme (Workshop) Open Service Bays & Side Windows */}
             <ellipse cx="654" cy="376" rx="52" ry="30" fill="url(#windowWarmGlow)" opacity="0.78" />
             <ellipse cx="766" cy="372" rx="54" ry="30" fill="url(#windowWarmGlow)" opacity="0.78" />
             <ellipse cx="574" cy="354" rx="34" ry="14" fill="url(#windowWarmGlow)" opacity="0.55" />
@@ -717,6 +502,12 @@ export function CartoonMapEnvironment({ isNightMode }: CartoonMapEnvironmentProp
             {/* Survey Building (อาคารสำรวจ) Windows & Front Entrance Patio Glow */}
             <ellipse cx="228" cy="680" rx="28" ry="18" fill="url(#windowWarmGlow)" opacity="0.72" />
             <ellipse cx="268" cy="692" rx="34" ry="22" fill="url(#windowWarmGlow)" opacity="0.78" />
+
+            {/* Transformer Storage Yard (ลานวางหม้อแปลง) Floodlight Glow */}
+            <ellipse cx="952" cy="294" rx="54" ry="26" fill="url(#windowWarmGlow)" opacity="0.65" />
+
+            {/* EV Charging Station Canopy Night Glow near เอกสารหม้อแปลง */}
+            <ellipse cx="1038" cy="825" rx="60" ry="34" fill="url(#evCanopyGlow)" opacity="0.68" />
           </g>
 
           {/* Tower Spire Blinking Red Aviation Beacon */}

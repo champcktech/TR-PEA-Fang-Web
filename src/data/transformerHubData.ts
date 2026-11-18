@@ -4,7 +4,8 @@ export type MapZoneId =
   | 'transformer-docs'
   | 'transformer-diagram'
   | 'dashboard'
-  | 'survey';
+  | 'survey'
+  | 'transformer-inventory';
 
 export interface MapZone {
   id: MapZoneId;
@@ -17,7 +18,14 @@ export interface MapZone {
   x: number;
   y: number;
   accentHex: string;
-  iconName: 'warehouse' | 'sales' | 'docs' | 'diagram' | 'dashboard' | 'survey';
+  iconName:
+    | 'warehouse'
+    | 'sales'
+    | 'docs'
+    | 'diagram'
+    | 'dashboard'
+    | 'survey'
+    | 'inventory';
 }
 
 export interface WorkLink {
@@ -40,20 +48,21 @@ export const VALID_ZONE_IDS: MapZoneId[] = [
   'transformer-diagram',
   'dashboard',
   'survey',
+  'transformer-inventory',
 ];
 
 export const MAP_BACKDROP_IMAGE =
-  '/src/assets/images/pea_fang_minimap_bg_1794882954306.jpg';
+  '/src/assets/images/pea_fang_minimap_crisp_v6.jpg';
 
 export const MAP_ZONES: MapZone[] = [
   {
     id: 'warehouse-stock',
     code: '01',
-    name: 'คลังหม้อแปลง',
-    shortLabel: 'คลังหม้อแปลง',
-    subtitle: 'ทะเบียนคุมสต็อกหม้อแปลง เบิก-จ่าย และตรวจสอบสภาพ',
+    name: 'Bisme',
+    shortLabel: 'Bisme',
+    subtitle: 'ระบบ Bisme · ทะเบียนคุมสต็อกหม้อแปลง เบิก-จ่าย และตรวจสอบสภาพ',
     description:
-      'ศูนย์รวมลิ้งค์ข้อมูลสต็อกหม้อแปลงสำรอง ทะเบียนเลขซีเรียล การเบิก-คืนพัสดุ และสถานะหม้อแปลงในคลัง กฟภ.สาขาฝาง',
+      'ศูนย์รวมลิ้งค์ระบบ Bisme ข้อมูลสต็อกหม้อแปลง ทะเบียนเลขซีเรียล การเบิก-คืนพัสดุ และสถานะงานคลัง กฟภ.สาขาฝาง',
     x: 42,
     y: 35,
     accentHex: '#0284C7',
@@ -68,7 +77,7 @@ export const MAP_ZONES: MapZone[] = [
     description:
       'ศูนย์รวมลิ้งค์ระบบงานขายหม้อแปลงไฟฟ้า แบบฟอร์มเสนอราคา ติดตามสถานะคำขอซื้อ และกำหนดการส่งมอบงาน',
     x: 71,
-    y: 44,
+    y: 46,
     accentHex: '#D97706',
     iconName: 'sales',
   },
@@ -123,6 +132,19 @@ export const MAP_ZONES: MapZone[] = [
     y: 65,
     accentHex: '#0D9488',
     iconName: 'survey',
+  },
+  {
+    id: 'transformer-inventory',
+    code: '07',
+    name: 'หม้อแปลงคงคลัง',
+    shortLabel: 'หม้อแปลงคงคลัง',
+    subtitle: 'ลานวางหม้อแปลง ยอดคงคลัง สภาพพร้อมจ่าย และพิกัดจัดเก็บ',
+    description:
+      'ศูนย์รวมลิ้งค์ข้อมูลหม้อแปลงคงคลัง ณ ลานวางหม้อแปลง ตรวจสอบจำนวน ขนาด kVA หมายเลข PEA และสถานะพร้อมใช้งาน กฟภ.สาขาฝาง',
+    x: 59.5,
+    y: 21,
+    accentHex: '#EA580C',
+    iconName: 'inventory',
   },
 ];
 

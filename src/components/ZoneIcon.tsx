@@ -1,4 +1,5 @@
 import {
+  Boxes,
   FileText,
   LayoutDashboard,
   MapPinned,
@@ -27,5 +28,7 @@ export function ZoneIcon({ name, className = 'w-4 h-4' }: ZoneIconProps) {
       return <LayoutDashboard className={className} />;
     case 'survey':
       return <MapPinned className={className} />;
+    case 'inventory':
+      return <Boxes className={className} />;
   }
 }
