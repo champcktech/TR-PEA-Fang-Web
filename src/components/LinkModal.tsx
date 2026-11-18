@@ -52,24 +52,28 @@ export function LinkModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmedTitle = title.trim();
-    const trimmedUrl = url.trim();
+    const trimmedTitle = title.trim().slice(0, 120);
+    const trimmedUrl = url.trim().slice(0, 500);
+    const trimmedSystem = (systemType.trim() || 'ระบบงานภายใน').slice(0, 60);
+    const trimmedDesc = (
+      description.trim() || 'ลิ้งค์ระบบปฏิบัติงานแผนกหม้อแปลง กฟภ.สาขาฝาง'
+    ).slice(0, 300);
+
     if (!trimmedTitle) {
       setErrorMsg('กรุณากรอกชื่อลิ้งค์งาน');
       return;
     }
-    if (!/^https?:\/\/.+/i.test(trimmedUrl)) {
+    if (!/^https?:\/\/.+/i.test(trimmedUrl) || trimmedUrl.length < 8) {
       setErrorMsg('กรุณากรอก URL ที่ขึ้นต้นด้วย https:// หรือ http://');
       return;
     }
     onSave({
       id: editingLink?.id,
       title: trimmedTitle,
-      description:
-        description.trim() || 'ลิ้งค์ระบบปฏิบัติงานแผนกหม้อแปลง กฟภ.สาขาฝาง',
+      description: trimmedDesc,
       url: trimmedUrl,
       zoneId,
-      systemType: systemType.trim() || 'ระบบงานภายใน',
+      systemType: trimmedSystem,
       isPinned: editingLink?.isPinned ?? false,
       isCustom: editingLink ? editingLink.isCustom : true,
     });
@@ -142,6 +146,7 @@ export function LinkModal({
             <input
               id="link-title"
               type="text"
+              maxLength={120}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="เช่น ตารางตรวจโหลดหม้อแปลง ปี 2569"
@@ -159,6 +164,7 @@ export function LinkModal({
             <input
               id="link-url"
               type="url"
+              maxLength={500}
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://docs.google.com/..."
@@ -177,6 +183,7 @@ export function LinkModal({
               <input
                 id="link-system-type"
                 type="text"
+                maxLength={60}
                 value={systemType}
                 onChange={(e) => setSystemType(e.target.value)}
                 placeholder="เช่น Google Sheets, SAP, Form"
@@ -194,6 +201,7 @@ export function LinkModal({
               <input
                 id="link-desc"
                 type="text"
+                maxLength={300}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="รายละเอียดการใช้งาน"

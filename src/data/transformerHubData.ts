@@ -29,7 +29,18 @@ export interface WorkLink {
   systemType: string;
   isPinned?: boolean;
   isCustom?: boolean;
+  createdBy?: string;
+  updatedBy?: string;
 }
+
+export const VALID_ZONE_IDS: MapZoneId[] = [
+  'warehouse-stock',
+  'transformer-sales',
+  'transformer-docs',
+  'transformer-diagram',
+  'dashboard',
+  'survey',
+];
 
 export const MAP_BACKDROP_IMAGE =
   '/src/assets/images/pea_fang_minimap_bg_1794882954306.jpg';

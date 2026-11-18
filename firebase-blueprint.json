@@ -1,0 +1,126 @@
+{
+  "entities": {
+    "WorkLink": {
+      "title": "WorkLink",
+      "description": "A work link item assigned to one of the 6 PEA Fang Mini-Map stations",
+      "type": "object",
+      "properties": {
+        "zoneId": {
+          "type": "string",
+          "enum": [
+            "warehouse-stock",
+            "transformer-sales",
+            "transformer-docs",
+            "transformer-diagram",
+            "dashboard",
+            "survey"
+          ],
+          "maxLength": 40,
+          "description": "Station ID on the 2D Mini-Map"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "Display title of the work link"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 300,
+          "description": "Short summary description of the work link"
+        },
+        "url": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 500,
+          "pattern": "^https?://.+",
+          "description": "Destination HTTP or HTTPS URL"
+        },
+        "systemType": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "System or document category label"
+        },
+        "isPinned": {
+          "type": "boolean",
+          "description": "Whether the link is pinned/starred"
+        },
+        "createdBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of the authenticated user who created the link"
+        },
+        "updatedBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of the authenticated user who last updated the link"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update"
+        }
+      },
+      "required": [
+        "zoneId",
+        "title",
+        "description",
+        "url",
+        "systemType",
+        "isPinned",
+        "createdBy",
+        "updatedBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminRole": {
+      "title": "AdminRole",
+      "description": "Authorized admin role document keyed by Firebase Auth UID",
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": [
+            "admin"
+          ],
+          "maxLength": 20,
+          "description": "Role name"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when admin role was granted"
+        }
+      },
+      "required": [
+        "role",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/workLinks/{linkId}": {
+      "schema": {
+        "$ref": "#/entities/WorkLink"
+      },
+      "description": "Publicly viewable work links for the PEA Fang 2D Mini-Map; authenticated verified users can create, and owners or admins can update and delete."
+    },
+    "/admins/{userId}": {
+      "schema": {
+        "$ref": "#/entities/AdminRole"
+      },
+      "description": "Admin role records keyed by Firebase Auth UID with zero PII."
+    }
+  }
+}

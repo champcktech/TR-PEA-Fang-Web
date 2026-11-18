@@ -1,0 +1,144 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net (Default-Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helper Primitives ---
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidUid(uid) {
+      return uid is string && uid.size() >= 1 && uid.size() <= 128 && uid.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        request.auth.token.email == 'champ5698@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidZoneId(zoneId) {
+      return zoneId is string && zoneId.size() <= 40 && zoneId in [
+        'warehouse-stock',
+        'transformer-sales',
+        'transformer-docs',
+        'transformer-diagram',
+        'dashboard',
+        'survey'
+      ];
+    }
+
+    function isValidWorkLink(data) {
+      return data.keys().hasAll([
+          'zoneId',
+          'title',
+          'description',
+          'url',
+          'systemType',
+          'isPinned',
+          'createdBy',
+          'updatedBy',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'zoneId',
+          'title',
+          'description',
+          'url',
+          'systemType',
+          'isPinned',
+          'createdBy',
+          'updatedBy',
+          'createdAt',
+          'updatedAt'
+        ])
+        && isValidZoneId(data.zoneId)
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 120
+        && data.description is string && data.description.size() <= 300
+        && data.url is string && data.url.size() >= 8 && data.url.size() <= 500 && data.url.matches('^https?://.+')
+        && data.systemType is string && data.systemType.size() >= 1 && data.systemType.size() <= 60
+        && data.isPinned is bool
+        && isValidUid(data.createdBy)
+        && isValidUid(data.updatedBy)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidAdminRole(data) {
+      return data.keys().hasAll(['role', 'createdAt'])
+        && data.keys().hasOnly(['role', 'createdAt'])
+        && data.role is string && data.role == 'admin'
+        && data.createdAt is timestamp;
+    }
+
+    // --- Collection: /workLinks/{linkId} ---
+    // Publicly viewable & clickable by all visitors; mutations strictly require verified login.
+    match /workLinks/{linkId} {
+      allow get: if isValidId(linkId) && isValidZoneId(existing().zoneId);
+      allow list: if isValidZoneId(existing().zoneId);
+
+      allow create: if isVerifiedUser()
+        && isValidId(linkId)
+        && isValidWorkLink(incoming())
+        && incoming().createdBy == request.auth.uid
+        && incoming().updatedBy == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedUser()
+        && isValidId(linkId)
+        && isValidWorkLink(incoming())
+        && incoming().createdBy == existing().createdBy
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedBy == request.auth.uid
+        && incoming().updatedAt == request.time
+        && (isAdmin() || existing().createdBy == request.auth.uid)
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'zoneId', 'title', 'description', 'url', 'systemType', 'isPinned', 'updatedBy', 'updatedAt'
+          ]) ||
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'isPinned', 'updatedBy', 'updatedAt'
+          ])
+        );
+
+      allow delete: if isVerifiedUser()
+        && isValidId(linkId)
+        && (isAdmin() || existing().createdBy == request.auth.uid);
+    }
+
+    // --- Collection: /admins/{userId} ---
+    match /admins/{userId} {
+      allow get: if isVerifiedUser() && isValidId(userId) && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isAdmin()
+        && isValidId(userId)
+        && isValidAdminRole(incoming())
+        && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isAdmin() && isValidId(userId);
+    }
+  }
+}
