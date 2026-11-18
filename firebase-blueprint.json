@@ -51,14 +51,14 @@
           "minLength": 1,
           "maxLength": 128,
           "pattern": "^[a-zA-Z0-9_\\-]+$",
-          "description": "UID of the authenticated user who created the link"
+          "description": "UID of the authorized editor who created the link"
         },
         "updatedBy": {
           "type": "string",
           "minLength": 1,
           "maxLength": 128,
           "pattern": "^[a-zA-Z0-9_\\-]+$",
-          "description": "UID of the authenticated user who last updated the link"
+          "description": "UID of the authorized editor who last updated the link"
         },
         "createdAt": {
           "type": "string",
@@ -84,27 +84,34 @@
         "updatedAt"
       ]
     },
-    "AdminRole": {
-      "title": "AdminRole",
-      "description": "Authorized admin role document keyed by Firebase Auth UID",
+    "AuthorizedEditor": {
+      "title": "AuthorizedEditor",
+      "description": "Allowlisted Google account email authorized to sign in and edit Mini-Map links",
       "type": "object",
       "properties": {
-        "role": {
+        "email": {
           "type": "string",
-          "enum": [
-            "admin"
-          ],
-          "maxLength": 20,
-          "description": "Role name"
+          "minLength": 5,
+          "maxLength": 128,
+          "pattern": "^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,}$",
+          "description": "Lowercase email address matching the document ID"
+        },
+        "addedBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID of the super-admin who granted access"
         },
         "createdAt": {
           "type": "string",
           "format": "date-time",
-          "description": "Server timestamp when admin role was granted"
+          "description": "Server timestamp when edit access was granted"
         }
       },
       "required": [
-        "role",
+        "email",
+        "addedBy",
         "createdAt"
       ]
     }
@@ -114,13 +121,13 @@
       "schema": {
         "$ref": "#/entities/WorkLink"
       },
-      "description": "Publicly viewable work links for the PEA Fang 2D Mini-Map; authenticated verified users can create, and owners or admins can update and delete."
+      "description": "Publicly readable work links for the PEA Fang 2D Mini-Map; mutations restricted strictly to allowlisted authorized editors."
     },
-    "/admins/{userId}": {
+    "/authorizedEditors/{editorEmail}": {
       "schema": {
-        "$ref": "#/entities/AdminRole"
+        "$ref": "#/entities/AuthorizedEditor"
       },
-      "description": "Admin role records keyed by Firebase Auth UID with zero PII."
+      "description": "Email allowlist documents keyed by lowercase email. Readable only by the super-admin or the matching user checking their own access."
     }
   }
 }

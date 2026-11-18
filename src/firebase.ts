@@ -1,14 +1,16 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, type User } from 'firebase/auth';
-import { doc, getDocFromServer, getFirestore } from 'firebase/firestore';
+import { doc, getDoc, getDocFromServer, getFirestore } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 export const ADMIN_EMAIL = 'champ5698@gmail.com';
+export const EMAIL_PATTERN = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
 
 export enum OperationType {
   CREATE = 'create',
@@ -62,10 +64,29 @@ export function handleFirestoreError(
   throw new Error(JSON.stringify(errInfo));
 }
 
-export function canEditWorkLink(user: User | null, createdBy?: string): boolean {
-  if (!user || !user.emailVerified) return false;
-  if (user.email === ADMIN_EMAIL) return true;
-  return Boolean(createdBy && createdBy === user.uid);
+export function isSuperAdminUser(user: User | null): boolean {
+  return Boolean(
+    user &&
+      user.emailVerified &&
+      user.email &&
+      user.email.trim().toLowerCase() === ADMIN_EMAIL
+  );
+}
+
+export async function checkIsAuthorizedEditor(user: User | null): Promise<boolean> {
+  if (!user || !user.emailVerified || !user.email) return false;
+  const normalizedEmail = user.email.trim().toLowerCase();
+  if (normalizedEmail === ADMIN_EMAIL) return true;
+  if (!EMAIL_PATTERN.test(normalizedEmail) || normalizedEmail.length > 128) {
+    return false;
+  }
+  const docPath = `authorizedEditors/${normalizedEmail}`;
+  try {
+    const snap = await getDoc(doc(db, 'authorizedEditors', normalizedEmail));
+    return snap.exists();
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, docPath);
+  }
 }
 
 async function testConnection() {

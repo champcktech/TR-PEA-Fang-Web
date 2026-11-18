@@ -1,5 +1,4 @@
 import { useMemo, useRef, useState } from 'react';
-import type { User } from 'firebase/auth';
 import {
   Check,
   Compass,
@@ -27,7 +26,6 @@ import {
   type MapZoneId,
   type WorkLink,
 } from '../data/transformerHubData';
-import { canEditWorkLink } from '../firebase';
 import { playMapChime } from '../utils/soundFx';
 import { CartoonMapEnvironment } from './CartoonMapEnvironment';
 import { CartoonMapVehicles } from './CartoonMapVehicles';
@@ -43,7 +41,7 @@ interface CartoonMiniMapProps {
   onOpenAddForZone: (zoneId: MapZoneId) => void;
   soundEnabled: boolean;
   onToggleSound: () => void;
-  user: User | null;
+  isAuthorizedEditor: boolean;
   onSignIn: () => void;
 }
 
@@ -56,7 +54,7 @@ export function CartoonMiniMap({
   onOpenAddForZone,
   soundEnabled,
   onToggleSound,
-  user,
+  isAuthorizedEditor,
   onSignIn,
 }: CartoonMiniMapProps) {
   const [zoom, setZoom] = useState<number>(1);
@@ -516,7 +514,7 @@ export function CartoonMiniMap({
                     <p className="text-xs text-slate-600 mb-2.5">
                       ยังไม่มีลิ้งค์ในสถานีนี้
                     </p>
-                    {user ? (
+                    {isAuthorizedEditor ? (
                       <button
                         type="button"
                         onClick={() => onOpenAddForZone(activeZone.id)}
@@ -538,85 +536,81 @@ export function CartoonMiniMap({
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {activeZoneLinks.map((link) => {
-                      const canEditThisLink = canEditWorkLink(user, link.createdBy);
+                    {activeZoneLinks.map((link) => (
+                      <div
+                        key={link.id}
+                        className="group p-2.5 rounded-xl border border-slate-200 hover:border-[#741B7E]/40 bg-white transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <a
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => playMapChime(soundEnabled, 'launch')}
+                            className="flex-1 min-w-0 focus-visible:outline-2 focus-visible:outline-[#741B7E] rounded"
+                          >
+                            <div className="text-[11px] text-slate-500 truncate">
+                              {link.systemType}
+                            </div>
+                            <div className="font-display text-sm font-semibold text-[#181326] group-hover:text-[#741B7E] transition-colors flex items-center gap-1.5">
+                              <span className="truncate">{link.title}</span>
+                              <ExternalLink className="w-3.5 h-3.5 shrink-0 opacity-60 group-hover:opacity-100" />
+                            </div>
+                          </a>
 
-                      return (
-                        <div
-                          key={link.id}
-                          className="group p-2.5 rounded-xl border border-slate-200 hover:border-[#741B7E]/40 bg-white transition-colors"
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <a
-                              href={link.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={() => playMapChime(soundEnabled, 'launch')}
-                              className="flex-1 min-w-0 focus-visible:outline-2 focus-visible:outline-[#741B7E] rounded"
-                            >
-                              <div className="text-[11px] text-slate-500 truncate">
-                                {link.systemType}
-                              </div>
-                              <div className="font-display text-sm font-semibold text-[#181326] group-hover:text-[#741B7E] transition-colors flex items-center gap-1.5">
-                                <span className="truncate">{link.title}</span>
-                                <ExternalLink className="w-3.5 h-3.5 shrink-0 opacity-60 group-hover:opacity-100" />
-                              </div>
-                            </a>
-
-                            <div className="flex items-center gap-0.5 shrink-0">
-                              {canEditThisLink && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    onTogglePin(link.id);
-                                    playMapChime(soundEnabled, 'pin');
-                                  }}
-                                  title={link.isPinned ? 'เลิกปักหมุด' : 'ปักหมุด'}
-                                  aria-label={link.isPinned ? 'เลิกปักหมุด' : 'ปักหมุด'}
-                                  className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                                    link.isPinned
-                                      ? 'text-amber-500 bg-amber-50'
-                                      : 'text-slate-400 hover:text-amber-500 hover:bg-slate-100'
-                                  }`}
-                                >
-                                  <Star
-                                    className="w-3.5 h-3.5"
-                                    fill={link.isPinned ? 'currentColor' : 'none'}
-                                  />
-                                </button>
-                              )}
+                          <div className="flex items-center gap-0.5 shrink-0">
+                            {isAuthorizedEditor && (
                               <button
                                 type="button"
-                                onClick={() => handleCopyUrl(link)}
-                                title="คัดลอกลิ้งค์"
-                                aria-label="คัดลอกลิ้งค์"
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-[#741B7E] hover:bg-slate-100 transition-colors cursor-pointer"
+                                onClick={() => {
+                                  onTogglePin(link.id);
+                                  playMapChime(soundEnabled, 'pin');
+                                }}
+                                title={link.isPinned ? 'เลิกปักหมุด' : 'ปักหมุด'}
+                                aria-label={link.isPinned ? 'เลิกปักหมุด' : 'ปักหมุด'}
+                                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                  link.isPinned
+                                    ? 'text-amber-500 bg-amber-50'
+                                    : 'text-slate-400 hover:text-amber-500 hover:bg-slate-100'
+                                }`}
                               >
-                                {copiedId === link.id ? (
-                                  <Check className="w-3.5 h-3.5 text-emerald-600" />
-                                ) : (
-                                  <Copy className="w-3.5 h-3.5" />
-                                )}
+                                <Star
+                                  className="w-3.5 h-3.5"
+                                  fill={link.isPinned ? 'currentColor' : 'none'}
+                                />
                               </button>
-                              {canEditThisLink && (
-                                <button
-                                  type="button"
-                                  onClick={() => onEditLink(link)}
-                                  title="แก้ไขลิ้งค์"
-                                  aria-label="แก้ไขลิ้งค์"
-                                  className="p-1.5 rounded-lg text-slate-400 hover:text-[#181326] hover:bg-slate-100 transition-colors cursor-pointer"
-                                >
-                                  <Pencil className="w-3.5 h-3.5" />
-                                </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleCopyUrl(link)}
+                              title="คัดลอกลิ้งค์"
+                              aria-label="คัดลอกลิ้งค์"
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-[#741B7E] hover:bg-slate-100 transition-colors cursor-pointer"
+                            >
+                              {copiedId === link.id ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
                               )}
-                            </div>
+                            </button>
+                            {isAuthorizedEditor && (
+                              <button
+                                type="button"
+                                onClick={() => onEditLink(link)}
+                                title="แก้ไขลิ้งค์"
+                                aria-label="แก้ไขลิ้งค์"
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-[#181326] hover:bg-slate-100 transition-colors cursor-pointer"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
 
                     <div className="pt-1 flex justify-end">
-                      {user ? (
+                      {isAuthorizedEditor ? (
                         <button
                           type="button"
                           onClick={() => onOpenAddForZone(activeZone.id)}

@@ -17,6 +17,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { CartoonMiniMap } from './components/CartoonMiniMap';
+import { EditorsModal, type AuthorizedEditorItem } from './components/EditorsModal';
 import { LinkModal } from './components/LinkModal';
 import { TopBar } from './components/TopBar';
 import {
@@ -28,10 +29,11 @@ import {
 import {
   OperationType,
   auth,
-  canEditWorkLink,
+  checkIsAuthorizedEditor,
   db,
   googleProvider,
   handleFirestoreError,
+  isSuperAdminUser,
 } from './firebase';
 
 const LEGACY_STORAGE_KEY = 'pea_fang_transformer_links_v3';
@@ -39,29 +41,78 @@ const LEGACY_STORAGE_KEY = 'pea_fang_transformer_links_v3';
 export default function App() {
   const [links, setLinks] = useState<WorkLink[]>(DEFAULT_WORK_LINKS);
   const [user, setUser] = useState<User | null>(null);
+  const [isAuthorizedEditor, setIsAuthorizedEditor] = useState<boolean>(false);
   const [authReady, setAuthReady] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [activeZoneId, setActiveZoneId] = useState<MapZoneId | null>(null);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isEditorsModalOpen, setIsEditorsModalOpen] = useState<boolean>(false);
+  const [authorizedEditors, setAuthorizedEditors] = useState<AuthorizedEditorItem[]>([]);
   const [editingLink, setEditingLink] = useState<WorkLink | null>(null);
   const [modalDefaultZoneId, setModalDefaultZoneId] =
     useState<MapZoneId>('warehouse-stock');
 
-  // Listen to Firebase Auth state
+  const isSuperAdmin = isAuthorizedEditor && isSuperAdminUser(user);
+
+  // Verify Firebase Auth state against strict allowlist; immediately sign out unauthorized accounts
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setAuthReady(true);
+    let active = true;
+
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!active) return;
+
       if (!currentUser) {
+        setUser(null);
+        setIsAuthorizedEditor(false);
         setIsModalOpen(false);
+        setIsEditorsModalOpen(false);
         setEditingLink(null);
+        setAuthReady(true);
+        return;
+      }
+
+      try {
+        const allowed = await checkIsAuthorizedEditor(currentUser);
+        if (!active) return;
+
+        if (!allowed) {
+          const rejectedEmail = currentUser.email ?? 'บัญชีนี้';
+          await signOut(auth);
+          if (!active) return;
+          setUser(null);
+          setIsAuthorizedEditor(false);
+          setIsModalOpen(false);
+          setIsEditorsModalOpen(false);
+          setEditingLink(null);
+          setAuthError(
+            `บัญชี ${rejectedEmail} ไม่มีสิทธิ์เข้าสู่ระบบแก้ไข (อนุญาตเฉพาะผู้ดูแลระบบที่ได้รับสิทธิ์เท่านั้น สามารถดูและกดลิ้งค์ได้ทันทีโดยไม่ต้องเข้าสู่ระบบ)`
+          );
+          setAuthReady(true);
+          return;
+        }
+
+        setAuthError(null);
+        setUser(currentUser);
+        setIsAuthorizedEditor(true);
+        setAuthReady(true);
+      } catch {
+        if (!active) return;
+        await signOut(auth);
+        setUser(null);
+        setIsAuthorizedEditor(false);
+        setAuthError('ไม่สามารถตรวจสอบสิทธิ์บัญชีได้ กรุณาลองใหม่อีกครั้ง');
+        setAuthReady(true);
       }
     });
-    return () => unsubscribe();
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
-  // Subscribe to public readable workLinks in Firestore (available to guests & logged-in users)
+  // Subscribe to public readable workLinks in Firestore (available to guests & authorized editors)
   useEffect(() => {
     const linksQuery = query(
       collection(db, 'workLinks'),
@@ -104,9 +155,34 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // One-time migration of any legacy localStorage links when a verified user signs in
+  // Super-admin only: subscribe to /authorizedEditors allowlist
   useEffect(() => {
-    if (!user || !user.emailVerified || typeof window === 'undefined') return;
+    if (!isSuperAdmin) {
+      setAuthorizedEditors([]);
+      return;
+    }
+
+    const unsubscribe = onSnapshot(
+      collection(db, 'authorizedEditors'),
+      (snapshot) => {
+        const list: AuthorizedEditorItem[] = snapshot.docs
+          .map((docSnap) => ({
+            email: String(docSnap.data().email ?? docSnap.id),
+          }))
+          .sort((a, b) => a.email.localeCompare(b.email));
+        setAuthorizedEditors(list);
+      },
+      (error) => {
+        handleFirestoreError(error, OperationType.LIST, 'authorizedEditors');
+      }
+    );
+
+    return () => unsubscribe();
+  }, [isSuperAdmin]);
+
+  // One-time migration of any legacy localStorage links when an authorized editor signs in
+  useEffect(() => {
+    if (!user || !isAuthorizedEditor || typeof window === 'undefined') return;
     let cancelled = false;
 
     async function migrateLegacyLinks(currentUser: User) {
@@ -160,7 +236,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, isAuthorizedEditor]);
 
   const handleSignIn = async () => {
     setAuthError(null);
@@ -189,19 +265,46 @@ export default function App() {
     try {
       await signOut(auth);
       setIsModalOpen(false);
+      setIsEditorsModalOpen(false);
       setEditingLink(null);
     } catch {
       setAuthError('ไม่สามารถออกจากระบบได้ กรุณาลองใหม่อีกครั้ง');
     }
   };
 
+  const handleAddAuthorizedEditor = async (email: string) => {
+    if (!user || !isSuperAdmin) return;
+    const normalized = email.trim().toLowerCase();
+    const docPath = `authorizedEditors/${normalized}`;
+    try {
+      await setDoc(doc(db, 'authorizedEditors', normalized), {
+        email: normalized,
+        addedBy: user.uid,
+        createdAt: serverTimestamp(),
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, docPath);
+    }
+  };
+
+  const handleRemoveAuthorizedEditor = async (email: string) => {
+    if (!user || !isSuperAdmin) return;
+    const normalized = email.trim().toLowerCase();
+    const docPath = `authorizedEditors/${normalized}`;
+    try {
+      await deleteDoc(doc(db, 'authorizedEditors', normalized));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, docPath);
+    }
+  };
+
   const handleTogglePin = async (linkId: string) => {
-    if (!user || !user.emailVerified) {
+    if (!user || !isAuthorizedEditor) {
       void handleSignIn();
       return;
     }
     const target = links.find((l) => l.id === linkId);
-    if (!target || !canEditWorkLink(user, target.createdBy)) return;
+    if (!target) return;
 
     const docPath = `workLinks/${linkId}`;
     try {
@@ -216,7 +319,7 @@ export default function App() {
   };
 
   const handleOpenAddModal = (zoneId?: MapZoneId) => {
-    if (!user || !user.emailVerified) {
+    if (!user || !isAuthorizedEditor) {
       void handleSignIn();
       return;
     }
@@ -226,11 +329,10 @@ export default function App() {
   };
 
   const handleOpenEditModal = (link: WorkLink) => {
-    if (!user || !user.emailVerified) {
+    if (!user || !isAuthorizedEditor) {
       void handleSignIn();
       return;
     }
-    if (!canEditWorkLink(user, link.createdBy)) return;
     setEditingLink(link);
     setModalDefaultZoneId(link.zoneId);
     setIsModalOpen(true);
@@ -239,7 +341,7 @@ export default function App() {
   const handleSaveLink = async (
     linkData: Omit<WorkLink, 'id'> & { id?: string }
   ) => {
-    if (!user || !user.emailVerified) {
+    if (!user || !isAuthorizedEditor) {
       void handleSignIn();
       return;
     }
@@ -259,9 +361,6 @@ export default function App() {
     }
 
     if (linkData.id) {
-      const existing = links.find((l) => l.id === linkData.id);
-      if (!existing || !canEditWorkLink(user, existing.createdBy)) return;
-
       const docPath = `workLinks/${linkData.id}`;
       try {
         await updateDoc(doc(db, 'workLinks', linkData.id), {
@@ -301,12 +400,10 @@ export default function App() {
   };
 
   const handleDeleteLink = async (linkId: string) => {
-    if (!user || !user.emailVerified) {
+    if (!user || !isAuthorizedEditor) {
       void handleSignIn();
       return;
     }
-    const existing = links.find((l) => l.id === linkId);
-    if (!existing || !canEditWorkLink(user, existing.createdBy)) return;
 
     const docPath = `workLinks/${linkId}`;
     try {
@@ -323,9 +420,12 @@ export default function App() {
         onSelectZone={setActiveZoneId}
         onOpenAddModal={() => handleOpenAddModal()}
         user={user}
+        isAuthorizedEditor={isAuthorizedEditor}
+        isSuperAdmin={isSuperAdmin}
         authReady={authReady}
         onSignIn={handleSignIn}
         onSignOut={handleSignOut}
+        onOpenEditorsModal={() => setIsEditorsModalOpen(true)}
       />
 
       <main className="flex-1 min-h-0 max-w-[1440px] w-full mx-auto px-4 sm:px-6 py-3 flex flex-col gap-3">
@@ -334,9 +434,9 @@ export default function App() {
             แผนที่ศูนย์รวมงานหม้อแปลง การไฟฟ้าส่วนภูมิภาคสาขาฝาง
           </h1>
           <p className="text-xs sm:text-sm text-slate-500">
-            {user
-              ? 'เข้าสู่ระบบแล้ว · สามารถเพิ่ม แก้ไข และจัดการลิ้งค์งานในแต่ละสถานีได้'
-              : 'โหมดดูข้อมูล · คลิกเลือกสถานีบนแผนที่เพื่อเปิดดูและกดลิ้งค์งาน (เข้าสู่ระบบเพื่อแก้ไข)'}
+            {isAuthorizedEditor
+              ? 'เข้าสู่ระบบผู้ดูแลแล้ว · สามารถเพิ่ม แก้ไข และจัดการลิ้งค์งานในแต่ละสถานีได้'
+              : 'โหมดดูข้อมูล · คลิกเลือกสถานีบนแผนที่เพื่อเปิดดูและกดลิ้งค์งาน (เข้าสู่ระบบเฉพาะผู้มีสิทธิ์เพื่อแก้ไข)'}
           </p>
         </div>
 
@@ -349,7 +449,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => setAuthError(null)}
-              className="font-semibold underline underline-offset-2 cursor-pointer"
+              className="font-semibold underline underline-offset-2 cursor-pointer shrink-0"
             >
               ปิด
             </button>
@@ -365,12 +465,12 @@ export default function App() {
           onOpenAddForZone={(zoneId) => handleOpenAddModal(zoneId)}
           soundEnabled={soundEnabled}
           onToggleSound={() => setSoundEnabled((prev) => !prev)}
-          user={user}
+          isAuthorizedEditor={isAuthorizedEditor}
           onSignIn={handleSignIn}
         />
       </main>
 
-      {user && (
+      {isAuthorizedEditor && (
         <LinkModal
           isOpen={isModalOpen}
           editingLink={editingLink}
@@ -378,6 +478,16 @@ export default function App() {
           onClose={() => setIsModalOpen(false)}
           onSave={handleSaveLink}
           onDelete={handleDeleteLink}
+        />
+      )}
+
+      {isSuperAdmin && (
+        <EditorsModal
+          isOpen={isEditorsModalOpen}
+          editors={authorizedEditors}
+          onClose={() => setIsEditorsModalOpen(false)}
+          onAddEditor={handleAddAuthorizedEditor}
+          onRemoveEditor={handleRemoveAuthorizedEditor}
         />
       )}
     </div>

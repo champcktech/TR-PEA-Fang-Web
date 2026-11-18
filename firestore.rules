@@ -20,7 +20,7 @@ service cloud.firestore {
     }
 
     function isVerifiedUser() {
-      return isSignedIn() && request.auth.token.email_verified == true;
+      return isSignedIn() && request.auth.token.email_verified == true && request.auth.token.email is string;
     }
 
     function isValidId(id) {
@@ -31,10 +31,18 @@ service cloud.firestore {
       return uid is string && uid.size() >= 1 && uid.size() <= 128 && uid.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
-    function isAdmin() {
-      return isVerifiedUser() && (
-        request.auth.token.email == 'champ5698@gmail.com' ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+    function isValidEmailDocId(email) {
+      return email is string && email.size() >= 5 && email.size() <= 128 && email.matches('^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,}$');
+    }
+
+    function isSuperAdmin() {
+      return isVerifiedUser() && request.auth.token.email.lower() == 'champ5698@gmail.com';
+    }
+
+    function isAuthorizedEditor() {
+      return isSuperAdmin() || (
+        isVerifiedUser() &&
+        exists(/databases/$(database)/documents/authorizedEditors/$(request.auth.token.email.lower()))
       );
     }
 
@@ -86,20 +94,22 @@ service cloud.firestore {
         && data.updatedAt is timestamp;
     }
 
-    function isValidAdminRole(data) {
-      return data.keys().hasAll(['role', 'createdAt'])
-        && data.keys().hasOnly(['role', 'createdAt'])
-        && data.role is string && data.role == 'admin'
+    function isValidAuthorizedEditor(data, editorEmail) {
+      return data.keys().hasAll(['email', 'addedBy', 'createdAt'])
+        && data.keys().hasOnly(['email', 'addedBy', 'createdAt'])
+        && isValidEmailDocId(data.email)
+        && data.email == editorEmail
+        && isValidUid(data.addedBy)
         && data.createdAt is timestamp;
     }
 
     // --- Collection: /workLinks/{linkId} ---
-    // Publicly viewable & clickable by all visitors; mutations strictly require verified login.
+    // Publicly viewable & clickable by all visitors; mutations strictly require an allowlisted authorized editor.
     match /workLinks/{linkId} {
       allow get: if isValidId(linkId) && isValidZoneId(existing().zoneId);
       allow list: if isValidZoneId(existing().zoneId);
 
-      allow create: if isVerifiedUser()
+      allow create: if isAuthorizedEditor()
         && isValidId(linkId)
         && isValidWorkLink(incoming())
         && incoming().createdBy == request.auth.uid
@@ -107,14 +117,13 @@ service cloud.firestore {
         && incoming().createdAt == request.time
         && incoming().updatedAt == request.time;
 
-      allow update: if isVerifiedUser()
+      allow update: if isAuthorizedEditor()
         && isValidId(linkId)
         && isValidWorkLink(incoming())
         && incoming().createdBy == existing().createdBy
         && incoming().createdAt == existing().createdAt
         && incoming().updatedBy == request.auth.uid
         && incoming().updatedAt == request.time
-        && (isAdmin() || existing().createdBy == request.auth.uid)
         && (
           incoming().diff(existing()).affectedKeys().hasOnly([
             'zoneId', 'title', 'description', 'url', 'systemType', 'isPinned', 'updatedBy', 'updatedAt'
@@ -124,21 +133,23 @@ service cloud.firestore {
           ])
         );
 
-      allow delete: if isVerifiedUser()
-        && isValidId(linkId)
-        && (isAdmin() || existing().createdBy == request.auth.uid);
+      allow delete: if isAuthorizedEditor() && isValidId(linkId);
     }
 
-    // --- Collection: /admins/{userId} ---
-    match /admins/{userId} {
-      allow get: if isVerifiedUser() && isValidId(userId) && (request.auth.uid == userId || isAdmin());
-      allow list: if isAdmin();
-      allow create: if isAdmin()
-        && isValidId(userId)
-        && isValidAdminRole(incoming())
+    // --- Collection: /authorizedEditors/{editorEmail} ---
+    // Users can only check their own authorization doc; only super-admin can list, add, or remove editors.
+    match /authorizedEditors/{editorEmail} {
+      allow get: if isVerifiedUser()
+        && isValidEmailDocId(editorEmail)
+        && (isSuperAdmin() || request.auth.token.email.lower() == editorEmail);
+      allow list: if isSuperAdmin();
+      allow create: if isSuperAdmin()
+        && isValidEmailDocId(editorEmail)
+        && isValidAuthorizedEditor(incoming(), editorEmail)
+        && incoming().addedBy == request.auth.uid
         && incoming().createdAt == request.time;
       allow update: if false;
-      allow delete: if isAdmin() && isValidId(userId);
+      allow delete: if isSuperAdmin() && isValidEmailDocId(editorEmail);
     }
   }
 }

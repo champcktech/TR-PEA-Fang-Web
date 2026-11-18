@@ -1,5 +1,5 @@
 import type { User } from 'firebase/auth';
-import { LogIn, LogOut } from 'lucide-react';
+import { LogIn, LogOut, ShieldCheck } from 'lucide-react';
 import { MAP_ZONES, type MapZoneId } from '../data/transformerHubData';
 
 interface TopBarProps {
@@ -7,9 +7,12 @@ interface TopBarProps {
   onSelectZone: (zoneId: MapZoneId | null) => void;
   onOpenAddModal: () => void;
   user: User | null;
+  isAuthorizedEditor: boolean;
+  isSuperAdmin: boolean;
   authReady: boolean;
   onSignIn: () => void;
   onSignOut: () => void;
+  onOpenEditorsModal: () => void;
 }
 
 export function TopBar({
@@ -17,9 +20,12 @@ export function TopBar({
   onSelectZone,
   onOpenAddModal,
   user,
+  isAuthorizedEditor,
+  isSuperAdmin,
   authReady,
   onSignIn,
   onSignOut,
+  onOpenEditorsModal,
 }: TopBarProps) {
   return (
     <header className="shrink-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90">
@@ -60,8 +66,20 @@ export function TopBar({
         <div className="flex items-center gap-2 shrink-0">
           {!authReady ? (
             <div className="w-28 h-8 rounded-xl bg-slate-100 animate-pulse" aria-hidden="true" />
-          ) : user ? (
+          ) : user && isAuthorizedEditor ? (
             <>
+              {isSuperAdmin && (
+                <button
+                  type="button"
+                  onClick={onOpenEditorsModal}
+                  title="จัดการบัญชีที่มีสิทธิ์แก้ไข"
+                  aria-label="จัดการบัญชีที่มีสิทธิ์แก้ไข"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:text-[#741B7E] hover:bg-slate-100 rounded-xl transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span className="hidden md:inline">สิทธิ์ผู้แก้ไข</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={onOpenAddModal}
