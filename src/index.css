@@ -32,6 +32,27 @@
   }
 }
 
+@keyframes stationWiggle {
+  0%, 30%, 100% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+  4% {
+    transform: translateY(-6px) rotate(-7deg) scale(1.07);
+  }
+  9% {
+    transform: translateY(-4px) rotate(7deg) scale(1.07);
+  }
+  14% {
+    transform: translateY(-7px) rotate(-5deg) scale(1.06);
+  }
+  19% {
+    transform: translateY(-3px) rotate(4deg) scale(1.04);
+  }
+  24% {
+    transform: translateY(-1px) rotate(-2deg) scale(1.02);
+  }
+}
+
 .animate-power-flow {
   stroke-dasharray: 7 7;
   animation: powerFlow 1.1s linear infinite;
@@ -41,12 +62,19 @@
   animation: floatPin 2.8s ease-in-out infinite;
 }
 
+.animate-station-wiggle {
+  animation: stationWiggle 3.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  transform-origin: center bottom;
+  will-change: transform;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
   .animate-power-flow,
-  .animate-float-pin {
+  .animate-float-pin,
+  .animate-station-wiggle {
     animation: none;
   }
 }

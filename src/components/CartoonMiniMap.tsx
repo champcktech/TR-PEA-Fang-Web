@@ -226,8 +226,8 @@ export function CartoonMiniMap({
             {/* Active 2D Transformer Crane & Bucket Repair Truck */}
             <CartoonMapVehicles visible={showVehicles} isNightMode={isNightMode} />
 
-            {/* 4 Interactive 2D Cartoon Station Markers */}
-            {MAP_ZONES.map((zone) => {
+            {/* Interactive 2D Cartoon Station Markers */}
+            {MAP_ZONES.map((zone, index) => {
               const isSelected = zone.id === activeZoneId;
               const linkCount = zoneLinkCounts[zone.id] ?? 0;
 
@@ -246,41 +246,54 @@ export function CartoonMiniMap({
                     isSelected ? 'z-20' : 'hover:z-20'
                   }`}
                 >
-                  {isSelected && (
-                    <span
-                      className="absolute -top-2 w-14 h-14 rounded-2xl border-2 border-amber-300 bg-amber-300/25 pointer-events-none transition-transform duration-200"
-                      aria-hidden="true"
-                    />
-                  )}
-
                   <div
-                    className={`relative flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-2xl border-2 border-[#181326] transition-transform duration-200 ${
+                    className={`relative flex flex-col items-center ${
                       isSelected
-                        ? 'scale-110 -translate-y-1 shadow-[0_6px_0_#181326] animate-float-pin'
-                        : 'shadow-[0_4px_0_#181326] group-hover:-translate-y-1 group-hover:scale-105'
+                        ? ''
+                        : 'animate-station-wiggle group-hover:[animation-play-state:paused]'
                     }`}
-                    style={{
-                      backgroundColor: isSelected ? '#F59E0B' : zone.accentHex,
-                      color: isSelected ? '#181326' : '#FFFFFF',
-                    }}
+                    style={
+                      isSelected
+                        ? undefined
+                        : { animationDelay: `${(index * 0.6).toFixed(1)}s` }
+                    }
                   >
-                    <ZoneIcon name={zone.iconName} className="w-5 h-5 sm:w-6 sm:h-6" />
-                    {linkCount > 0 && (
-                      <span className="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 rounded-md bg-white border-2 border-[#181326] text-[#181326] font-mono text-[11px] font-semibold leading-none flex items-center justify-center tabular-nums">
-                        {linkCount}
-                      </span>
+                    {isSelected && (
+                      <span
+                        className="absolute -top-2 w-14 h-14 rounded-2xl border-2 border-amber-300 bg-amber-300/25 pointer-events-none transition-transform duration-200"
+                        aria-hidden="true"
+                      />
                     )}
-                  </div>
 
-                  <span
-                    className={`mt-1.5 px-2.5 py-0.5 rounded-lg border-2 border-[#181326] text-[11px] sm:text-xs font-display font-semibold whitespace-nowrap transition-colors shadow-[0_2px_0_#181326] ${
-                      isSelected
-                        ? 'bg-[#181326] text-amber-300'
-                        : 'bg-white/95 text-[#181326] group-hover:bg-[#741B7E] group-hover:text-white'
-                    }`}
-                  >
-                    {zone.shortLabel}
-                  </span>
+                    <div
+                      className={`relative flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-2xl border-2 border-[#181326] transition-transform duration-200 ${
+                        isSelected
+                          ? 'scale-110 -translate-y-1 shadow-[0_6px_0_#181326] animate-float-pin'
+                          : 'shadow-[0_4px_0_#181326] group-hover:-translate-y-1 group-hover:scale-105'
+                      }`}
+                      style={{
+                        backgroundColor: isSelected ? '#F59E0B' : zone.accentHex,
+                        color: isSelected ? '#181326' : '#FFFFFF',
+                      }}
+                    >
+                      <ZoneIcon name={zone.iconName} className="w-5 h-5 sm:w-6 sm:h-6" />
+                      {linkCount > 0 && (
+                        <span className="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 rounded-md bg-white border-2 border-[#181326] text-[#181326] font-mono text-[11px] font-semibold leading-none flex items-center justify-center tabular-nums">
+                          {linkCount}
+                        </span>
+                      )}
+                    </div>
+
+                    <span
+                      className={`mt-1.5 px-2.5 py-0.5 rounded-lg border-2 border-[#181326] text-[11px] sm:text-xs font-display font-semibold whitespace-nowrap transition-colors shadow-[0_2px_0_#181326] ${
+                        isSelected
+                          ? 'bg-[#181326] text-amber-300'
+                          : 'bg-white/95 text-[#181326] group-hover:bg-[#741B7E] group-hover:text-white'
+                      }`}
+                    >
+                      {zone.shortLabel}
+                    </span>
+                  </div>
                 </button>
               );
             })}
