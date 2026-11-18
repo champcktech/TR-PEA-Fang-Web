@@ -5,7 +5,8 @@ export type MapZoneId =
   | 'transformer-diagram'
   | 'dashboard'
   | 'survey'
-  | 'transformer-inventory';
+  | 'transformer-inventory'
+  | 'gis';
 
 export interface MapZone {
   id: MapZoneId;
@@ -25,7 +26,8 @@ export interface MapZone {
     | 'diagram'
     | 'dashboard'
     | 'survey'
-    | 'inventory';
+    | 'inventory'
+    | 'gis';
 }
 
 export interface WorkLink {
@@ -49,6 +51,7 @@ export const VALID_ZONE_IDS: MapZoneId[] = [
   'dashboard',
   'survey',
   'transformer-inventory',
+  'gis',
 ];
 
 export const MAP_BACKDROP_IMAGE =
@@ -145,6 +148,19 @@ export const MAP_ZONES: MapZone[] = [
     y: 21,
     accentHex: '#EA580C',
     iconName: 'inventory',
+  },
+  {
+    id: 'gis',
+    code: '08',
+    name: 'GIS',
+    shortLabel: 'GIS',
+    subtitle: 'ระบบสารสนเทศภูมิศาสตร์ GIS พิกัดหม้อแปลง และโครงข่ายไฟฟ้า',
+    description:
+      'ศูนย์รวมลิ้งค์ระบบแผนที่ GIS พิกัดตำแหน่งหม้อแปลง แนวสายส่ง ระบบจำหน่าย และข้อมูลภูมิสารสนเทศ กฟภ.สาขาฝาง',
+    x: 84,
+    y: 33,
+    accentHex: '#0891B2',
+    iconName: 'gis',
   },
 ];
 

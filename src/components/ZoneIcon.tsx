@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   MapPinned,
   Network,
+  RadioTower,
   Store,
   Warehouse,
 } from 'lucide-react';
@@ -30,5 +31,7 @@ export function ZoneIcon({ name, className = 'w-4 h-4' }: ZoneIconProps) {
       return <MapPinned className={className} />;
     case 'inventory':
       return <Boxes className={className} />;
+    case 'gis':
+      return <RadioTower className={className} />;
   }
 }

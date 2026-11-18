@@ -29,7 +29,7 @@ export function TopBar({
 }: TopBarProps) {
   return (
     <header className="shrink-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4 xl:gap-6">
         <button
           type="button"
           onClick={() => onSelectZone(null)}
@@ -40,7 +40,7 @@ export function TopBar({
 
         <nav
           aria-label="เลือกสถานีบนแผนที่"
-          className="hidden lg:flex items-center gap-3.5 xl:gap-5 text-xs xl:text-sm font-medium text-slate-600"
+          className="hidden lg:flex items-center gap-3 xl:gap-4 text-xs xl:text-sm font-medium text-slate-600"
         >
           {MAP_ZONES.map((zone) => {
             const isActive = zone.id === activeZoneId;

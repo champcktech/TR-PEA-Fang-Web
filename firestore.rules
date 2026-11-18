@@ -54,7 +54,8 @@ service cloud.firestore {
         'transformer-diagram',
         'dashboard',
         'survey',
-        'transformer-inventory'
+        'transformer-inventory',
+        'gis'
       ];
     }
 
